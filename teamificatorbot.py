@@ -8,10 +8,10 @@ from string import ascii_uppercase
 from logcreds import *
 
 bot = telebot.TeleBot(TOKEN)
-conn = sqlite3.connect('players.sqlite')
+conn = sqlite3.connect('players.sqlite', check_same_thread = False)
 cur = conn.cursor()
 
-bot.threaded = False
+#bot.threaded = False
 
 def divideteams(players):
     shuffle(players)
@@ -30,7 +30,7 @@ def add_player(message):
         cur.execute("INSERT INTO data (username) VALUES '{}'".format("@" + message.from_user.username))
         conn.commit()
         bot.reply_to(message, "Теперь ты официальный КСер XD")
-    #cur.cancel()
+    cur.cancel()
         
 @bot.message_handler(commands=['immaout'])
 def remove_player(message):
@@ -40,7 +40,7 @@ def remove_player(message):
         bot.reply_to(message, "Ухади отсюда, мужик!")
     else:
         bot.reply_to(message, "Котом Шрёдингера запахло")
-    #cur.cancel()
+    cur.cancel()
 
 @bot.message_handler(commands=['print_all'])
 def printing(message):
@@ -49,7 +49,7 @@ def printing(message):
         bot.send_message(message.chat.id, "Больше нит КСеров")
     else:
         bot.send_message(message.chat.id, "Yo a not mah masta")
-    #cur.cancel()
+    cur.cancel()
 
 @bot.message_handler(commands=['print_teams'])
 def printteams(message):
@@ -68,13 +68,14 @@ def add_dummies(message):
     for ch in ascii_uppercase:
         cur.execute("INSERT INTO data (username) VALUES '{}'".format("@" + ch * 8))
         conn.commit()
-        #cur.cancel()
+        cur.cancel()
 
 @bot.message_handler(commands=['delete_dummies'])  # delete dummy players
 def delete_dummies(message):
     for ch in ascii_uppercase:
         cur.execute("DELETE FROM data WHERE username = '{}'".format("@" + ch * 8))
         conn.commit()
+        cur.cancel()
 
 #conn.close()
 
