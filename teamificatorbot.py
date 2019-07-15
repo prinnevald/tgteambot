@@ -20,20 +20,19 @@ def divideteams(players):
 def send_welcome(message):
     bot.send_message(message.chat.id, intromsg)
 
-
 @bot.message_handler(commands=['reg'])
 def add_player(message):
-    if cur.execute('SELECT EXISTS(SELECT * FROM data WHERE username = (?))',("@" + message.from_user.username)) == 1:
+    if cur.execute("SELECT EXISTS(SELECT * FROM data WHERE username = '{}')".format("@" + message.from_user.username)) == 1:
         bot.send_message(message.chat.id, "Я фсио видэль. Тебя точно видэль")
     else:
-        cur.execute('INSERT INTO data (username) VALUES (?)',("@" + message.from_user.username))
+        cur.execute("INSERT INTO data (username) VALUES '{}'".format("@" + message.from_user.username))
         conn.commit()
         bot.reply_to(message, "Теперь ты официальный КСер XD")
         
 @bot.message_handler(commands=['immaout'])
 def remove_player(message):
-    if cur.execute('SELECT EXISTS(SELECT * FROM data WHERE username = (?))', ("@" + message.from_user.username)) == 1:
-        cur.execute('DELETE FROM data WHERE username = (?))', ("@" + message.from_user.username))  #remove from table
+    if cur.execute("SELECT EXISTS(SELECT * FROM data WHERE username = '{}')".format("@" + message.from_user.username)) == 1:
+        cur.execute("DELETE FROM data WHERE username = '{}')".format("@" + message.from_user.username))  #remove from table
         conn.commit()
         bot.reply_to(message, "Ухади отсюда, мужик!")
     else:
@@ -42,7 +41,7 @@ def remove_player(message):
 @bot.message_handler(commands=['print_all'])
 def printing(message):
     if message.from_user.username in verified_users:
-        print(list(cur.execute('SELECT username FROM data')[0][0]))
+        print(list(cur.execute("SELECT username FROM data")[0][0]))
         bot.send_message(message.chat.id, "Больше нит КСеров")
     else:
         bot.send_message(message.chat.id, "Yo a not mah masta")
@@ -62,13 +61,13 @@ def printteams(message):
 @bot.message_handler(commands=['add_dummies'])  # adds dummy players
 def add_dummies(message):
     for ch in ascii_uppercase:
-        cur.execute('INSERT INTO data (username) VALUES (?)',("@" + ch * 8))
+        cur.execute("INSERT INTO data (username) VALUES '{}'".format("@" + ch * 8))
         conn.commit()
 
 @bot.message_handler(commands=['delete_dummies'])  # delete dummy players
 def delete_dummies(message):
     for ch in ascii_uppercase:
-        cur.execute('DELETE FROM data WHERE username = (?)', ("@" + ch * 8))
+        cur.execute("DELETE FROM data WHERE username = '{}'".format("@" + ch * 8))
         conn.commit()
 
 bot.polling()
