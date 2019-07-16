@@ -1,78 +1,103 @@
 # -*- coding: utf-8 -*-
 
 import telebot
-import sqlite3
-
 from random import shuffle
+import sqlite3 as sq
 from string import ascii_uppercase
+
 from logcreds import *
 
 bot = telebot.TeleBot(TOKEN)
-# bot = telebot.AsyncTeleBot(TOKEN)
-conn = sqlite3.connect('players.sqlite')#, check_same_thread = False)
-cur = conn.cursor()
 
-#bot.threaded = False
 
-# def divideteams(players):
-#     shuffle(players)
-#     mid = len(players) // 2
-#     return players[:mid], players[mid:]
+def divideteams(players):
+    shuffle(players)
+    mid = len(players) // 2
+    return players[:mid], players[mid:]
+
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     bot.send_message(message.chat.id, intromsg)
 
+
 @bot.message_handler(commands=['reg'])
 def add_player(message):
-    if cur.execute("SELECT EXISTS(SELECT * FROM data WHERE username = ?)", ["@" + message.from_user.username]):
-        bot.send_message(message.chat.id, "Я фсио видэль. Тебя точно видэль")
-    else:
-        cur.execute("INSERT INTO data (username) VALUES ?",["@" + message.from_user.username])
-        conn.commit()
+    conn = sq.connect('database.db')
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM users WHERE username=?", (message.from_user.username,))
+    if len(cur.fetchall()) == 0:
+        cur.execute("INSERT INTO users VALUES (?)", (message.from_user.username,))
         bot.reply_to(message, "Теперь ты официальный КСер XD")
+    else:
+        bot.send_message(message.chat.id, "Я фсио видэль. Тебя точно видэль")
+    conn.commit()
+    conn.close()
+
+
+@bot.message_handler(commands=['add'])  # adds dummy players
+def add_dummies(message):
+    conn = sq.connect('database.db')
+    cur = conn.cursor()
+
+    for ch in ascii_uppercase:
+        cur.execute("SELECT * FROM users WHERE username=?", (ch * 8,))
+        if len(cur.fetchall()) == 0:
+            cur.execute("INSERT INTO users VALUES (?)", (ch * 8,))
+
+    conn.commit()
+    conn.close()
+
 
 @bot.message_handler(commands=['immaout'])
 def remove_player(message):
-    if cur.execute("SELECT EXISTS(SELECT * FROM data WHERE username = ?)",["@" + message.from_user.username]):
-        cur.execute("DELETE FROM data WHERE username = ?)",["@" + message.from_user.username])  #remove from table
-        conn.commit()
+    if message.from_user.username in players:
         bot.reply_to(message, "Ухади отсюда, мужик!")
+        players.remove(message.from_user.username)
     else:
         bot.reply_to(message, "Котом Шрёдингера запахло")
-    
+
+
 @bot.message_handler(commands=['print_all'])
 def printing(message):
-    if message.from_user.username in verified_users:
-        print(list(cur.execute("SELECT username FROM data")[0][0]))
-        bot.send_message(message.chat.id, "Больше нит КСеров")
-    else:
-        bot.send_message(message.chat.id, "Yo r not mah masta")
+    # if message.from_user.username in verified_users:
 
-# @bot.message_handler(commands=['print_teams'])
-# def printteams(message):
-#     team_a, team_b = divideteams(players)
+    conn = sq.connect('database.db')
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users")
+    list = cur.fetchall()
 
-#     bot.send_message(message.chat.id, "TEAM A: " + str(len(team_a)) + " players")
-#     for ta in team_a:
-#         bot.send_message(message.chat.id, ta)
+    for player in list:
+        bot.send_message(message.chat.id, "@" + player[0])
+    bot.send_message(message.chat.id, "Больше нит КСеров")
 
-#     bot.send_message(message.chat.id, "TEAM B: " + str(len(team_b)) + " players")
-#     for tb in team_b:
-#         bot.send_message(message.chat.id, tb)
+    conn.commit()
+    conn.close()
 
-@bot.message_handler(commands=['add_dummies'])  # adds dummy players
-def add_dummies(message):
-    for ch in ascii_uppercase:
-        cur.execute("INSERT INTO data (username) VALUES ?",["@" + ch * 8])
-        conn.commit()
 
-@bot.message_handler(commands=['delete_dummies'])  # delete dummy players
-def delete_dummies(message):
-    for ch in ascii_uppercase:
-        cur.execute("DELETE FROM data WHERE username = ?",["@" + ch * 8])
-        conn.commit()
+# @bot.message_handler(commands=['create_db'])
+# def create_db(message):
+#     conn = sq.connect('database.db')
+#     cur = conn.cursor()
+#     cur.execute("""CREATE TABLE users (
+#             username text
+#             )""")
+#     conn.commit()
+#     conn.close()
 
-#conn.close()
+
+@bot.message_handler(commands=['print_teams'])
+def printteams(message):
+    team_a, team_b = divideteams(players)
+
+    bot.send_message(message.chat.id, "TEAM A: " + str(len(team_a)) + " players")
+    for ta in team_a:
+        bot.send_message(message.chat.id, ta)
+
+    bot.send_message(message.chat.id, "TEAM B: " + str(len(team_b)) + " players")
+    for tb in team_b:
+        bot.send_message(message.chat.id, tb)
+
 
 bot.polling()

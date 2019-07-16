@@ -1,1 +1,0 @@
-admins = ['Shaneliya', 'treoa', 'prinnydood']
