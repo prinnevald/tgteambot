@@ -2,6 +2,7 @@
 
 import telebot
 from random import shuffle
+import sqlite3 as sq
 from string import ascii_uppercase
 
 from logcreds import *
@@ -27,17 +28,31 @@ def send_welcome(message):
 
 @bot.message_handler(commands=['reg'])
 def add_player(message):
-    if message.from_user.username in players:
-        bot.send_message(message.chat.id, "Я фсио видэль. Тебя точно видэль")
-    else:
-        players.append(message.from_user.username)
+    conn = sq.connect('database.db')
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM users WHERE username=?", (message.from_user.username,))
+    if len(cur.fetchall()) == 0:
+        cur.execute("INSERT INTO users VALUES (?)", (message.from_user.username,))
         bot.reply_to(message, "Теперь ты официальный КСер XD")
+    else:
+        bot.send_message(message.chat.id, "Я фсио видэль. Тебя точно видэль")
+    conn.commit()
+    conn.close()
 
 
 @bot.message_handler(commands=['add'])  # adds dummy players
 def add_dummies(message):
+    conn = sq.connect('database.db')
+    cur = conn.cursor()
+
     for ch in ascii_uppercase:
-        players.append(ch * 8)
+        cur.execute("SELECT * FROM users WHERE username=?", (ch * 8,))
+        if len(cur.fetchall()) == 0:
+            cur.execute("INSERT INTO users VALUES (?)", (ch * 8,))
+
+    conn.commit()
+    conn.close()
 
 
 @bot.message_handler(commands=['immaout'])
@@ -51,10 +66,29 @@ def remove_player(message):
 
 @bot.message_handler(commands=['print_all'])
 def printing(message):
-    if message.from_user.username in verified_users:
-        for player in players:
-            bot.send_message(message.chat.id, "@" + player)
-        bot.send_message(message.chat.id, "Больше нит КСеров")
+    # if message.from_user.username in verified_users:
+
+    conn = sq.connect('database.db')
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users")
+    list = cur.fetchall()
+
+    for player in list:
+        bot.send_message(message.chat.id, "@" + player[0])
+    bot.send_message(message.chat.id, "Больше нит КСеров")
+    conn.commit()
+    conn.close()
+
+
+# @bot.message_handler(commands=['create_db'])
+# def create_db(message):
+#     conn = sq.connect('database.db')
+#     cur = conn.cursor()
+#     cur.execute("""CREATE TABLE users (
+#             username text
+#             )""")
+#     conn.commit()
+#     conn.close()
 
 
 @bot.message_handler(commands=['print_teams'])
