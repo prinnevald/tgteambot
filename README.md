@@ -11,6 +11,6 @@ statement into teams.
 Currently it can only divide into two teams, but we are planning on changing it
 and add even more features!
 
-It is buildt using Python, SQLite3 and pyTelegramBot made by @etennoir
+It is buildt using Python, SQLite3 and pyTelegramBot made by @eternnoir
 
 Enjoy!!
