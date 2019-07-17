@@ -150,6 +150,7 @@ def clear_db(message):
         cur = conn.cursor()
 
         cur.execute("DELETE FROM users")
+        bot.reply_to(message, "Done")    
 
         conn.commit()
         conn.close()
