@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-TOKEN = '754569723:AAEk4CYExqx711a_r98VOvgTfe4533vUB5w'
+TOKEN = 'put your bot token here'
 
 players = []
 
 team_a = []
 team_b = []
 
-verified_users = ['Shaneliya', 'treoa', 'prinnydood', 'tomo_yo']
+verified_users = ['put', 'your', 'admins', 'here']
 
 intromsg = "Всем привет, друзья 🙂 Я бот созданный \
         для деления на команды в чатике CS2022. Можете использовать меня \n \
